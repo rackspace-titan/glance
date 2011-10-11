@@ -24,6 +24,7 @@ from glance.api.v1 import members
 from glance.common import wsgi
 
 logger = logging.getLogger('glance.api.v1')
+active_downloads = 0
 
 
 class API(wsgi.Router):

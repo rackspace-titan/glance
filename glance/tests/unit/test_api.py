@@ -1916,6 +1916,7 @@ class TestGlanceAPI(unittest.TestCase):
         stubs.clean_out_fake_filesystem_backend()
         self.stubs.UnsetAll()
         self.destroy_fixtures()
+        server.active_downloads = 0
 
     def create_fixtures(self):
         for fixture in self.FIXTURES:
@@ -2302,6 +2303,20 @@ class TestGlanceAPI(unittest.TestCase):
         self.assertEqual(res.status_int, 200)
         self.assertEqual(res.content_type, 'application/octet-stream')
         self.assertEqual('chunk00000remainder', res.body)
+
+    def test_max_downloads_ok(self):
+        req = webob.Request.blank("/images/2")
+        stubs.stub_out_config(self.stubs, dict(max_downloads=3))
+        server.active_downloads = 2
+        res = req.get_response(self.api)
+        self.assertEqual(res.status_int, 200)
+
+    def test_too_many_downloads(self):
+        req = webob.Request.blank("/images/2")
+        stubs.stub_out_config(self.stubs, dict(max_downloads=3))
+        server.active_downloads = 3
+        res = req.get_response(self.api)
+        self.assertEqual(res.status_int, 503)
 
     def test_show_non_exists_image(self):
         req = webob.Request.blank("/images/42")

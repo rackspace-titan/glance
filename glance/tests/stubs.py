@@ -197,3 +197,8 @@ def stub_out_registry_and_store_server(stubs):
               fake_get_connection_type)
     stubs.Set(glance.common.client.ImageBodyIterator, '__iter__',
               fake_image_iter)
+
+def stub_out_config(stubs, options_dict):
+    def fake_get_option(options, option, **kwargs):
+        return options_dict.get(option)
+    stubs.Set(glance.common.config, 'get_option', fake_get_option)
