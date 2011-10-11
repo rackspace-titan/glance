@@ -27,11 +27,13 @@ from webob.exc import (HTTPNotFound,
                        HTTPConflict,
                        HTTPBadRequest,
                        HTTPForbidden,
+                       HTTPServiceUnavailable,
                        HTTPNoContent,
                        HTTPUnauthorized)
 
 from glance import api
 from glance import image_cache
+from glance.common import config
 from glance.common import exception
 from glance.common import notifier
 from glance.common import wsgi
@@ -208,6 +210,17 @@ class Controller(api.BaseController):
 
         :raises HTTPNotFound if image is not available to user
         """
+
+        max_active_downloads = config.get_option(self.options,
+                                                 'max_active_downloads',
+                                                 type='int')
+        if api.v1.active_downloads >= max_active_downloads:
+            msg = _("Glance server has reached maximum simultaneous downloads"
+             "of %s") % max_active_downloads
+            raise HTTPServiceUnavailable(explanation="")
+        else:
+            api.v1.active_downloads += 1
+
         image = self.get_active_image_meta_or_404(req, id)
 
         def get_from_store(image_meta):

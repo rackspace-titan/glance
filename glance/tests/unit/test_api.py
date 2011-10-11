@@ -1908,6 +1908,7 @@ class TestGlanceAPI(unittest.TestCase):
              'properties': {}}]
         self.context = rcontext.RequestContext(is_admin=True)
         db_api.configure_db(OPTIONS)
+        stubs.stub_out_config(self.stubs, dict(max_active_downloads=3))
         self.destroy_fixtures()
         self.create_fixtures()
 
@@ -2306,14 +2307,12 @@ class TestGlanceAPI(unittest.TestCase):
 
     def test_max_downloads_ok(self):
         req = webob.Request.blank("/images/2")
-        stubs.stub_out_config(self.stubs, dict(max_downloads=3))
         server.active_downloads = 2
         res = req.get_response(self.api)
         self.assertEqual(res.status_int, 200)
 
     def test_too_many_downloads(self):
         req = webob.Request.blank("/images/2")
-        stubs.stub_out_config(self.stubs, dict(max_downloads=3))
         server.active_downloads = 3
         res = req.get_response(self.api)
         self.assertEqual(res.status_int, 503)
